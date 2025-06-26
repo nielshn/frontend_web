@@ -131,7 +131,7 @@ class TransactionController extends Controller
         // Kembalikan hasil pencarian dalam format JSON
         return response()->json($filteredBarang);
     }
-  public function update(Request $request, $kode)
+    public function update(Request $request, $kode)
 {
     $token = session('token');
     if (!$token) {

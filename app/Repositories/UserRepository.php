@@ -49,7 +49,7 @@ class UserRepository
 
     public function update(array $data, $id)
     {
-        return $this->withToken()->put("{$this->apiBaseUrl}/users/{$id}", $data);
+        return $this->withToken()->put("{$this->apiBaseUrl}/users/admin-update/{$id}", $data);
     }
 
     public function delete($id)

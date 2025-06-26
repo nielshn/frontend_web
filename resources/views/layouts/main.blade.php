@@ -277,12 +277,12 @@
     if (swalCombineElement) {
         swalCombineElement.addEventListener('click', function() {
             Swal.fire({
-                title: 'Logout Confirmation',
-                text: 'Are you sure you want to logout now?',
+                title: 'Konfirmasi Logout',
+                text: 'Apakah anda yakin ingin keluar?',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: '<i class="ph-sign-out"></i> Yes, log me out',
-                cancelButtonText: '<i class="ph-x-circle"></i> Nope, stay logged in',
+                confirmButtonText: '<i class="ph-sign-out"></i> Ya , Keluar',
+                cancelButtonText: '<i class="ph-x-circle"></i> Tidak Tetap Disini',
                 buttonsStyling: false,
                 reverseButtons: true,
                 background: '#fdfdfd',

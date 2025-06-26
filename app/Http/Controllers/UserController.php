@@ -44,26 +44,30 @@ class UserController extends Controller
     {
         try {
             $response = $this->userService->createUser($request->only([
-                'name', 'email', 'password', 'password_confirmation', 'roles'
+                'name',
+                'email',
+                'password',
+                'password_confirmation',
+                'roles'
             ]));
+            // dd($response->body());
 
             if ($response->successful()) {
                 return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
             }
 
-        $responseBody = $response->json();
-        return back()->withErrors([
-            'message' => $responseBody['error'] ?? 'Gagal menyimpan user.'
-        ]);
-    } catch (\Exception $e) {
-        return back()->withErrors(['message' => $e->getMessage()]);
+            $responseBody = $response->json();
+            return back()->withErrors([
+                'message' => $responseBody['error'] ?? 'Gagal menyimpan user.'
+            ]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
+        }
     }
-}
 
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         try {
-            // Mendapatkan data yang diterima dari form, termasuk roles yang dikirim sebagai array
             $data = $request->only([
                 'name',
                 'password',
@@ -71,16 +75,24 @@ public function update(Request $request, $id)
                 'roles'
             ]);
 
-            // Proses update user menggunakan service
             $response = $this->userService->updateUser($data, $id);
-
-            if ($response->successful()) {
-                return redirect()->route('users.index')->with('success', 'User berhasil diperbarui!');
+// dd($response->body());
+            // Cek status HTTP dan flag 'success'
+            if ($response->ok() && $response->json('success') === true) {
+                return redirect()->route('users.index')
+                    ->with('success', $response->json('message', 'User berhasil diperbarui!'));
             }
 
-            $responseBody = $response->json();
+            $body = $response->json();
+
+            // Jika ada errors validation
+            if (isset($body['errors'])) {
+                return back()->withErrors($body['errors']);
+            }
+
+            // Pesan error umum
             return back()->withErrors([
-                'message' => $responseBody['error'] ?? 'Gagal memperbarui user.'
+                'message' => $body['message'] ?? 'Gagal memperbarui user.'
             ]);
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);
@@ -97,7 +109,7 @@ public function update(Request $request, $id)
 
             return back()->withErrors(['message' => 'Gagal menghapus user.']);
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }

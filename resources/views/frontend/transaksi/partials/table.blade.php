@@ -1,16 +1,13 @@
-<?php
-
-// resources/views/frontend/transaksi/partials/table.blade.php
-?>
 @if (count($daftarBarang) > 0)
-    <div class="table-responsive mb-3">
-        <table class="table table-bordered table-hover align-middle shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
             <thead class="table-primary text-center">
                 <tr>
-                    <th>Nama Barang</th>
+                    <th>#</th>
                     <th>Kode</th>
+                    <th>Nama Barang</th>
                     <th>Gambar</th>
-                    <th>Kategori</th>
+                    <th>Kategori Barang</th>
                     <th>Stok Tersedia</th>
                     <th>Jumlah</th>
                     <th>Aksi</th>
@@ -18,38 +15,26 @@
             </thead>
             <tbody>
                 @foreach ($daftarBarang as $barang)
-                    <tr>
-                        <td class="text-center">
-                            <input type="text" name="items[{{ $barang['kode'] }}][barang_nama]" class="form-control" value="{{ $barang['nama'] }}">
-                            <input type="hidden" name="items[{{ $barang['kode'] }}][barang_kode]" value="{{ $barang['kode'] }}">
-                        </td>
-                        <td class="text-center">{{ $barang['kode'] }}</td>
-                        <td class="text-center">
-                            @if (!empty($barang['gambar']))
-                                <a href="{{ asset($barang['gambar']) }}" data-lightbox="gambar-{{ $barang['kode'] }}">
-                                    <img src="{{ asset($barang['gambar']) }}" alt="{{ $barang['nama'] }}" style="width: 60px; height: 60px; object-fit: cover;">
-                                </a>
-                            @else
-                                <span class="text-muted">Tidak ada gambar</span>
-                            @endif
-                        </td>
-                        <td class="text-center">{{ $barang['kategoribarang'] }}</td>
-                        <td class="text-center">{{ $barang['stok_tersedia'] }}</td>
-                        <td class="text-center">
-                            <input type="number" name="items[{{ $barang['kode'] }}][quantity]" class="form-control" value="{{ $barang['jumlah'] }}" min="1" required>
-                        </td>
-                        <td class="text-center">
-                            <form action="{{ route('transaksi.remove-item', $transactionId) }}" method="POST" style="display:inline;">
-                                @csrf
-                                <input type="hidden" name="kode" value="{{ $barang['kode'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
-                            </form>
-                        </td>
-                    </tr>
+                    <x-item-row :barang="$barang" :loop="$loop" />
                 @endforeach
             </tbody>
         </table>
     </div>
+    <div class="text-center mt-4">
+        <!-- Tombol tambah keterangan transaksi -->
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-add-description">
+            <i class="bi bi-chat-square-text me-1"></i> Tambah Keterangan Transaksi
+        </button>
+        <!-- Preview deskripsi transaksi -->
+        <div id="transaction-description-preview" class="mt-3 text-primary fw-semibold" style="min-height: 24px;"></div>
+        <!-- Tombol submit transaksi -->
+        <button type="submit" class="btn btn-primary mt-4" id="submit-transaction">
+            <i class="bi bi-check2-circle me-2"></i>Simpan Transaksi
+        </button>
+    </div>
+    </div>
 @else
-    <div class="text-center text-muted mb-3">Tidak ada barang dalam daftar.</div>
+    <div class="alert alert-info text-center">
+        Belum ada barang yang ditambahkan.
+    </div>
 @endif

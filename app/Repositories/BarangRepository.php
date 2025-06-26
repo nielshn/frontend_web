@@ -43,7 +43,6 @@ class BarangRepository
     {
         $url = config('api.base_url') . '/generate-qrcodes';
         $response = Http::withToken($token)->get($url);
-
         logger()->info('QR Refresh Response:', [
             'status' => $response->status(),
             'body' => $response->body()

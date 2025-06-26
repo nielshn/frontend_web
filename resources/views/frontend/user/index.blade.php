@@ -98,11 +98,11 @@
                                 <label>Role</label>
                                 <select name="roles" class="form-control" required>
                                     @foreach ($roles as $role)
-                                        <option value="{{ $role['id'] }}"
-                                            {{ isset($user['roles'][0]) && $user['roles'][0] == $role['name'] ? 'selected' : '' }}>
+                                        <option value="{{ $role['name'] }}"
+                                            {{ in_array($role['name'], old('roles', $user['roles'] ?? [])) ? 'selected' : '' }}>
                                             {{ $role['name'] }}
                                         </option>
-                                    @endforeach
+                                        @endforeach
                                 </select>
                             </div>
                         </div>

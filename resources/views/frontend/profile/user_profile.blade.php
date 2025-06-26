@@ -22,7 +22,7 @@
             </div>
         @endif
 
-        <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="card shadow-sm bordere-0 rounded-4 p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold text-muted form-label mb-0">
                     <i class="bi bi-person-circle me-2 text-muted text-primary form-label"></i> Profil Pengguna

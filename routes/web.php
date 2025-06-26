@@ -77,7 +77,6 @@ Route::get('/laporan-transaksi/export-excel/{id}', [LaporanController::class, 'e
     Route::resource('transaction-types', TransactionTypeController::class);
     Route::resource('roles', RoleController::class)->middleware('check.permission:view_role');
     Route::resource('users', UserController::class)->middleware('check.permission:view_user');
-    Route::put('profile/update-email', [ProfileController::class, 'updateEmail'])->name('profile.update-email');
 
     Route::resource('transactions', TransactionController::class);
 Route::put('/transaksi/{kode}', [TransactionController::class, 'update'])->name('transaksi.update');

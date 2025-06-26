@@ -3,6 +3,28 @@
     @include('components.flash-message')
 
     <div class="container py-5">
+        <!-- Modal Deskripsi Transaksi -->
+        <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Keterangan Transaksi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="modal-description" class="form-label">Keterangan Transaksi</label>
+                            <textarea id="modal-description" class="form-control" rows="3" placeholder="Contoh: Barang masuk untuk proyek A"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-primary" id="save-description">Simpan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="text-center mb-5">
             <h2 class="fw-bold text-primary">Input Barang</h2>
             <p class="text-muted">Pilih metode input dan masukkan data barang</p>
@@ -55,12 +77,12 @@
         </form>
 
         <!-- Transaction Form -->
-        <!-- Hilangkan action agar default submit tidak terjadi -->
         <form id="transaction-form" method="POST">
             @csrf
             <div class="mb-4">
                 <label for="transaction-type" class="form-label">Tipe Transaksi:</label>
                 <select name="transaction_type_id" id="transaction-type" class="form-select">
+                    <option value="" disabled selected>-- Pilih Tipe Transaksi --</option>
                     @foreach ($transactionTypes as $type)
                         <option value="{{ $type['id'] }}">{{ $type['name'] }}</option>
                     @endforeach
@@ -202,33 +224,10 @@
                 });
         }
 
-        function updateQuantity(kode, increment) {
-            const jumlahElement = document.getElementById('jumlah-' + kode);
-            let jumlah = parseInt(jumlahElement.innerText);
-            if (jumlah + increment >= 0) {
-                jumlah += increment;
-                jumlahElement.innerText = jumlah;
-
-                fetch("{{ route('kode_barang.check') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                        },
-                        body: JSON.stringify({
-                            kode,
-                            jumlah
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.success) {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(() => {
-                        alert('Terjadi kesalahan saat memperbarui jumlah.');
-                    });
+        function validateQuantityInput(input) {
+            let value = parseInt(input.value);
+            if (isNaN(value) || value < 1) {
+                input.value = 1;
             }
         }
 
@@ -260,19 +259,37 @@
             }
         }
 
+        let transactionDescription = '';
 
+        // Tampilkan modal saat klik tombol tambah keterangan
+        $(document).on('click', '#btn-add-description', function() {
+            $('#modal-description').val(transactionDescription);
+            $('#descriptionModal').modal('show');
+        });
+
+        // Simpan deskripsi transaksi dan tampilkan preview
+        document.getElementById('save-description').addEventListener('click', function() {
+            transactionDescription = $('#modal-description').val();
+            $('#transaction-description-preview').text(transactionDescription);
+            $('#descriptionModal').modal('hide');
+        });
+
+        // Submit transaksi, kirim deskripsi transaksi ke backend
         document.getElementById('transaction-form').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const transactionTypeId = document.getElementById('transaction-type').value;
+            if (!transactionTypeId) {
+                showFlashMessage('danger', 'Pilih tipe transaksi terlebih dahulu.');
+                return;
+            }
 
             let items = [];
             document.querySelectorAll('[data-barang-kode]').forEach(row => {
                 const kode = row.getAttribute('data-barang-kode');
-
-                const qtyElem = row.querySelector('.quantity');
-                if (qtyElem) {
-                    const qty = parseInt(qtyElem.innerText);
+                const qtyInput = row.querySelector('.quantity-input');
+                if (qtyInput) {
+                    const qty = parseInt(qtyInput.value);
                     if (qty > 0) {
                         items.push({
                             barang_kode: kode,
@@ -284,7 +301,6 @@
 
             if (items.length === 0) {
                 showFlashMessage('danger', 'Tidak ada barang yang ditambahkan.');
-
                 return;
             }
 
@@ -296,6 +312,7 @@
                     },
                     body: JSON.stringify({
                         transaction_type_id: parseInt(transactionTypeId),
+                        description: transactionDescription,
                         items: items
                     })
                 })
@@ -307,13 +324,12 @@
                     showFlashMessage('success', data.message || 'Transaksi berhasil!');
                     setTimeout(() => {
                         window.location.href = "{{ route('transactions.index') }}";
-                    }, 1000);
+                    }, 2500); // Perbesar delay agar alert terlihat
                 })
                 .catch(error => {
                     const errorMessage = error?.message || 'Gagal menyimpan transaksi.';
                     showFlashMessage('danger', errorMessage);
                 });
-
         });
 
         function showFlashMessage(type, message) {

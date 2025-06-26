@@ -35,6 +35,7 @@ class BarangController extends Controller
             $token = session('token');
 
             $barangs = $this->barang_service->getAllBarang();
+            // dd($barangs);
             logger()->info('Barang Index Fetch:', $barangs);
             $jenis_barangs = JenisBarangResource::collection(collect($this->jenis_barang_service->all($token)));
             $satuans = SatuanResource::collection(collect($this->satuan_service->all($token)));

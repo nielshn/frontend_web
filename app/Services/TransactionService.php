@@ -129,6 +129,7 @@ class TransactionService
             'message' => 'Barang tidak ditemukan.',
         ];
     }
+
  public function update($kode, array $data, $token)
 {
     try {

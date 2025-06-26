@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Login</title>
-
+ {{-- <link rel="icon" href="{{ asset($web['web_logo']) }}" type="image/png"> --}}
+    {{-- <title>{{ $web['web_nama'] }}</title> --}}
     <!-- Global stylesheets -->
     <link href="{{ asset('template/assets/fonts/inter/inter.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('template/assets/icons/phosphor/styles.min.css') }}" rel="stylesheet" type="text/css">
@@ -41,8 +41,8 @@
                             <div class="card-body p-4">
                                 <div class="text-center mb-4">
 
-                                    <img src="{{ asset('template/assets/images/logo_icon.png') }}" class="h-48px mb-2"
-                                        alt="Logo">
+                                    {{-- <img src="{{ $web['web_logo']}}" class="h-48px mb-2" alt="Logo"> --}}
+\
                                     <h3 class="fw-semibold mb-0">Login</h3>
                                     <small class="text-muted">Masukkan kredensial Anda di bawah ini</small>
                                 </div>
@@ -93,11 +93,11 @@
                                     </div>
                                 </div>
                                 <!-- Forgot password -->
-                                <div class="d-flex justify-content-end mb-3">
+                                {{-- <div class="d-flex justify-content-end mb-3">
                                     <a href="" class="text-decoration-none small text-muted">
                                         Lupa password?
                                     </a>
-                                </div>
+                                </div> --}}
 
                                 <!-- Remember me -->
                                 <div class="mb-3 form-check">

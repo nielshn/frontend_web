@@ -50,11 +50,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Stok Tersedia</label>
-                        <input type="number" min="0" value="0" name="stok_tersedia" class="form-control"
-                            required>
-                    </div>
+
 
                     <!-- Upload Gambar -->
                     <div class="col-md-6">
@@ -193,7 +189,6 @@
                 barangcategory_id: form.barangcategory_id.value,
                 jenisbarang_id: form.jenisbarang_id.value,
                 satuan_id: form.satuan_id.value,
-                stok_tersedia: form.stok_tersedia.value,
                 barang_gambar: inputBase64.value
             };
 

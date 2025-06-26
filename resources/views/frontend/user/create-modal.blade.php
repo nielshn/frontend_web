@@ -14,7 +14,10 @@
                     <label>Role</label>
                     <select name="roles[]" class="form-control" required>
                         @foreach ($roles as $role)
-                            <option value="{{ $role['id'] }}">{{ $role['name'] }}</option>
+                            <option value="{{ $role['name'] }}"
+                                {{ in_array($role['name'], $user['roles']) ? 'selected' : '' }}>
+                                {{ $role['name'] }}
+                            </option>
                         @endforeach
                     </select>
                 </div>

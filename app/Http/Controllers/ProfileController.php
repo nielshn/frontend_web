@@ -164,4 +164,34 @@ public function changeePassword(Request $request)
             return redirect()->back()->withErrors(['avatar' => 'Terjadi kesalahan.']);
         }
     }
+
+public function updateUser(Request $request)
+{
+    $response = Http::withToken(session('token'))->put(config('api.base_url') . '/users/update', [
+        'name' => $request->input('name'),
+        'phone_number' => $request->input('phone'),
+    ]);
+
+    if ($response->successful()) {
+        $message = $response->json('message') ?? 'Profil berhasil diperbarui.';
+        // Redirect ke halaman profil agar data user diambil ulang dari API
+        return redirect()->route('profile.user_profile')->with('success', $message)->with('from_edit_profile', true);
+    }
+
+    // Tangani error dari validasi backend
+    $errorMessage = $response->json('message') ?? 'Gagal memperbarui profil';
+
+    // Jika ada error validasi terperinci (dari ValidationException)
+    if (isset($response->json()['errors'])) {
+        $errors = collect($response->json()['errors'])->flatten()->implode(', ');
+        $errorMessage = $errors;
+    }
+
+    // Redirect ke halaman profil dengan error agar modal tetap terbuka
+    return redirect()->route('profile.user_profile')
+        ->withErrors(['name' => $errorMessage])
+        ->with('from_edit_profile', true)
+        ->withInput();
+}
+
 }

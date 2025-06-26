@@ -60,10 +60,12 @@
                                         data-bs-target="#detailTransaction{{ $trx['id'] }}" title="Detail">
                                         <i class="ph-eye"></i>
                                     </a>
+                                    @can('update_transaction')
                                     <a href="#" class="btn btn-warning btn-sm ms-2" data-bs-toggle="modal"
-                                        data-bs-target="#modalEditTransaction{{ $trx['id'] }}">
-                                        <i class="ph-pencil"></i> Edit
-                                    </a>
+                                    data-bs-target="#modalEditTransaction{{ $trx['id'] }}">
+                                    <i class="ph-pencil"></i> Edit
+                                </a>
+                                @endcan
                                 </div>
                             </td>
                         </tr>
@@ -76,6 +78,7 @@
             </table>
         </div>
     </div>
+
 
     {{-- Modal Edit Transaksi --}}
     @foreach ($transactions as $trx)
