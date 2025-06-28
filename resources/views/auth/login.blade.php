@@ -42,7 +42,7 @@
                                 <div class="text-center mb-4">
 
                                     {{-- <img src="{{ $web['web_logo']}}" class="h-48px mb-2" alt="Logo"> --}}
-\
+
                                     <h3 class="fw-semibold mb-0">Login</h3>
                                     <small class="text-muted">Masukkan kredensial Anda di bawah ini</small>
                                 </div>

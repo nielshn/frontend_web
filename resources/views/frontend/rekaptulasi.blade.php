@@ -108,7 +108,7 @@
             card.className = 'col-md-3 mb-3';
             card.innerHTML = `
                 <a href="${baseUrl}?transaction_type_id=${id}&start_date=${start}&end_date=${end}" class="text-decoration-none">
-                    <div class="card text-white bg-primary shadow h-100">
+                    <div class="card text-white bd-light shadow h-100">
                         <div class="card-body d-flex align-items-center">
                             <div class="me-3">
                                 <i class="bi bi-list-check fs-1"></i>

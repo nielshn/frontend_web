@@ -44,12 +44,12 @@
                                             <i class="ph-eye"></i>
                                         </a>
                                     @endcan
-                                    {{-- @can('update_satuan') --}}
+                                    @can('update_satuan')
                                     <a href="#" class="text-warning me-2" data-bs-toggle="modal"
                                         data-bs-target="#editSatuanModal{{ $satuan['id'] }}">
                                         <i class="ph-pencil"></i>
                                     </a>
-                                    {{-- @endcan --}}
+                                    @endcan
                                     @can('delete_satuan')
                                         <a href="#" class="text-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteSatuanModal{{ $satuan['id'] }}">

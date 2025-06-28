@@ -3,14 +3,15 @@
 @section('contentprofile')
     <!-- Card Profil -->
     <div class="col-md-12">
-        {{-- ALERT SUKSES/ERROR DI LUAR MODAL --}}
-        @if (session('success') && !session('from_edit_profile'))
+        {{-- ALERT SUKSES/ERROR --}}
+        @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                 <i class="bi bi-check-circle me-2"></i>
                 <strong>Berhasil!</strong> {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+
         @if ($errors->has('name') || $errors->has('phone') || $errors->has('message'))
             <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
                 <i class="bi bi-exclamation-triangle me-2"></i>
@@ -36,7 +37,7 @@
                 <div class="col-md-12">
                     <label class="form-label text-muted">Email</label>
                     <div class="form-control bg-light border-0 shadow-sm">{{ $user['email'] }}</div>
-                    @if(isset($user['pending_email']) && $user['pending_email'])
+                    @if (isset($user['pending_email']) && $user['pending_email'])
                         <small class="text-warning mt-1 d-block">
                             <i class="bi bi-clock me-1"></i>
                             Menunggu verifikasi: {{ $user['pending_email'] }}
@@ -79,8 +80,7 @@
                                 <label class="form-label">Nama Lengkap</label>
                                 <input type="text"
                                     class="form-control bg-light border-0 shadow-sm @error('name') is-invalid @enderror"
-                                    name="name"
-                                    value="{{ $user['name'] }}">
+                                    name="name" value="{{ old('name', $user['name']) }}">
                                 @error('name')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -89,8 +89,7 @@
                                 <label class="form-label">Nomor Telepon</label>
                                 <input type="text"
                                     class="form-control bg-light border-0 shadow-sm @error('phone') is-invalid @enderror"
-                                    name="phone"
-                                    value="{{ $user['phone'] }}">
+                                    name="phone" value="{{ old('phone', $user['phone']) }}">
                                 @error('phone')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -119,7 +118,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        @if (session('success') && session('from_edit_profile') !== true)
+                        @if (session('success') && !session('from_edit_profile'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="bi bi-check-circle me-2"></i>
                                 <strong>Berhasil!</strong> {{ session('success') }}
@@ -135,7 +134,7 @@
                             </div>
                         @endif
 
-                        @if(isset($user['pending_email']) && $user['pending_email'])
+                        @if (isset($user['pending_email']) && $user['pending_email'])
                             <div class="alert alert-info alert-dismissible fade show" role="alert">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <strong>Email pending verifikasi:</strong> {{ $user['pending_email'] }}
@@ -145,13 +144,9 @@
                         @endif
 
                         <label class="form-label">Email Baru</label>
-                        <input type="email"
-                            id="new_email_input"
+                        <input type="email" id="new_email_input"
                             class="form-control bg-light border-0 shadow-sm @error('new_email') is-invalid @enderror"
-                            name="new_email"
-                            placeholder="nama@email.com"
-                            value="{{ old('new_email') }}"
-                            required>
+                            name="new_email" placeholder="nama@email.com" value="{{ old('new_email') }}" required>
                         @error('new_email')
                             <div class="invalid-feedback d-block">
                                 {{ $message }}
@@ -172,7 +167,7 @@
         </div>
     </div>
 
-    {{-- Modal auto-show hanya jika error pada form terkait --}}
+    {{-- Auto-show modal hanya saat ada error (bukan saat berhasil) --}}
     @if ($errors->has('new_email'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -182,7 +177,7 @@
         </script>
     @endif
 
-    @if ($errors->has('name') || $errors->has('phone') || $errors->has('message') || session('from_edit_profile'))
+    @if ($errors->has('name') || $errors->has('phone') || $errors->has('message'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var editInfoModal = new bootstrap.Modal(document.getElementById('editInfoModal'));

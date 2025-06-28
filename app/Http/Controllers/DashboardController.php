@@ -72,7 +72,7 @@ class DashboardController extends Controller
         $roles = $this->role_service->count();
         $barang_category = $this->kategori_barang_service->count();
         $transactionType = $this->transactionType_service->count();
-
+// dd($transactionType);
         // 🔄 Ambil semua transaksi
         $transactions = $this->transaksi_service->getAllTransactions($token);
 
