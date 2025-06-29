@@ -40,7 +40,7 @@ const getNotifications = async () => {
   console.log('🔄 Memulai fetch notifikasi...');
   loading.value = true;
   try {
-    const { data } = await axios.get('http://127.0.0.1:8090/api/notifikasis?limit=15', {
+    const { data } = await axios.get('http://service-gudang.tsth2.web.id/api/notifikasis?limit=15', {
       headers: headers.value
     });
 
@@ -69,7 +69,7 @@ const markRead = async (id) => {
   unread.value--;
 
   try {
-    await axios.put(`http://127.0.0.1:8090/api/notifikasis/${id}/read`, {}, {
+    await axios.put(`http://service-gudang.tsth2.web.id/api/notifikasis/${id}/read`, {}, {
       headers: headers.value,
     });
   } catch (e) {
@@ -89,7 +89,7 @@ const markAllRead = async () => {
   markingAllRead.value = true;
 
   try {
-    await axios.put('http://127.0.0.1:8090/api/notifikasi/read-all', {}, {
+    await axios.put('http://service-gudang.tsth2.web.id/api/notifikasi/read-all', {}, {
       headers: headers.value,
     });
     toast.success('Semua notifikasi ditandai sebagai dibaca');

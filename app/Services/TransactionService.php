@@ -50,18 +50,41 @@ class TransactionService
 
             $response = $this->transactionRepository->createTransaction($data, $token);
 
-            if (!$response['success']) {
-                throw new \Exception($response['message']);
+            // Cek apakah response sukses berdasarkan struktur yang diterima
+            if (isset($response['success']) && $response['success'] === false) {
+                // Jika response memiliki property success dan bernilai false
+                return [
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Gagal membuat transaksi'
+                ];
+            } elseif (isset($response['message']) && strpos($response['message'], 'tidak mencukupi') !== false) {
+                // Handle khusus untuk error stok tidak mencukupi (kode 422)
+                return [
+                    'success' => false,
+                    'message' => $response['message']
+                ];
+            } elseif (isset($response['error'])) {
+                // Handle error response lainnya
+                return [
+                    'success' => false,
+                    'message' => $response['error']
+                ];
+            } else {
+                // Jika tidak ada indikator error, anggap berhasil
+                Session::forget('daftar_barang');
+
+                return [
+                    'success' => true,
+                    'message' => 'Transaksi berhasil disimpan',
+                    'data' => $response
+                ];
             }
-
-            Session::forget('daftar_barang');
-
-            return ['success' => true, 'message' => 'Transaksi berhasil disimpan'];
         } catch (Exception $e) {
             Log::error('Gagal menyimpan transaksi', [
                 'error' => $e->getMessage(),
                 'payload' => $data
             ]);
+
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -130,27 +153,25 @@ class TransactionService
         ];
     }
 
- public function update($kode, array $data, $token)
-{
-    try {
-        $response = $this->transactionRepository->update($kode, $data, $token);
+    public function update($kode, array $data, $token)
+    {
+        try {
+            $response = $this->transactionRepository->update($kode, $data, $token);
 
-        if (!$response['success']) {
-            throw new \Exception($response['message']);
+            if (!$response['success']) {
+                throw new \Exception($response['message']);
+            }
+
+            return [
+                'success' => true,
+                'message' => $response['message'] ?? 'Transaksi berhasil diperbarui',
+                'data' => $response['data'] ?? null,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
         }
-
-        return [
-            'success' => true,
-            'message' => $response['message'] ?? 'Transaksi berhasil diperbarui',
-            'data' => $response['data'] ?? null,
-        ];
-    } catch (\Exception $e) {
-        return [
-            'success' => false,
-            'message' => $e->getMessage(),
-        ];
-
     }
-}
-
 }

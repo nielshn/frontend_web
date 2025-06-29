@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\WebRepositories;
+use Illuminate\Support\Facades\Http;
 
 class WebService
 {
@@ -23,4 +24,10 @@ class WebService
     {
         return $this->webRepo->update($token, $id, $data);
     }
+
+     public function getBy($id = 1)
+    {
+        return $this->webRepo->getBy($id);
+    }
+
 }

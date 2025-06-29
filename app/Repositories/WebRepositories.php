@@ -37,4 +37,15 @@ class WebRepositories
             return null;
         }
     }
+public function getBy($id = 1)
+{
+    $response = Http::get("{$this->baseUrl}/{$id}");
+
+    if ($response->successful()) {
+        $json = $response->json(); // ambil semua JSON sebagai array
+        return $json['data'] ?? null; // akses manual key 'data'
+    }
+
+    return null;
+}
 }

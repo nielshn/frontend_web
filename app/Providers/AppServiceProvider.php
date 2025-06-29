@@ -48,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
                 session(['user' => $user]);
                 $web = $this->getCachedWeb($token);
                 $permissions = $user['permissions'] ?? [];
+                // dd($web);
 
                 $flags = $this->generatePermissionsFlags(
                     array_map(fn($p) => is_array($p) ? $p['name'] : $p, $permissions),
@@ -88,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $key = 'web_info_' . md5($token);
 
-        return Cache::remember($key, 300, function () use ($token) {
+        return Cache::remember($key, 30, function () use ($token) {
             return app(WebService::class)->getById($token, 1);
         });
     }

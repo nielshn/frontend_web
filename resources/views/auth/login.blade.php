@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
- {{-- <link rel="icon" href="{{ asset($web['web_logo']) }}" type="image/png"> --}}
+    {{-- <link rel="icon" href="{{ asset($web['web_logo']) }}" type="image/png"> --}}
     {{-- <title>{{ $web['web_nama'] }}</title> --}}
     <!-- Global stylesheets -->
     <link href="{{ asset('template/assets/fonts/inter/inter.css') }}" rel="stylesheet" type="text/css">
@@ -41,7 +41,8 @@
                             <div class="card-body p-4">
                                 <div class="text-center mb-4">
 
-                                    {{-- <img src="{{ $web['web_logo']}}" class="h-48px mb-2" alt="Logo"> --}}
+
+    {{-- <img src="{{ $web['web_logo'] }}" class="h-48px mb-2" alt="Logo"> --}}
 
                                     <h3 class="fw-semibold mb-0">Login</h3>
                                     <small class="text-muted">Masukkan kredensial Anda di bawah ini</small>
