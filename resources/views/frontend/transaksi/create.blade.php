@@ -3,6 +3,9 @@
     @include('components.flash-message')
 
     <div class="container py-5">
+        <!-- Flash Message Container -->
+        <div class="flash-message-container"></div>
+
         <!-- Modal Deskripsi Transaksi -->
         <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -183,6 +186,10 @@
                     </li>`;
                     }
                     $('#search-results').html(resultsHtml).show();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching suggestions:', error);
+                    showFlashMessage('danger', 'Gagal mengambil saran barang.');
                 }
             });
         }
@@ -195,6 +202,7 @@
             $('#search-results').hide();
         });
 
+        // Fungsi untuk mengirim kode dan menangani response error dengan baik
         function sendCode(kode) {
             fetch("{{ route('kode_barang.check') }}", {
                     method: 'POST',
@@ -206,20 +214,36 @@
                         kode
                     })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
+                .then(async response => {
+                    // Ambil response sebagai JSON
+                    const data = await response.json();
+
+                    // Cek status response
+                    if (response.ok && data.success) {
+                        // Success case
                         $('#tabel-barang').html(data.html);
                         $('#manual-error').addClass('d-none');
                         $('#manual-success').removeClass('d-none');
                         scannerSound.play();
+
+                        // Reset input manual
+                        $('#manual-input').val('');
+                        $('#search-results').hide();
                     } else {
-                        $('#manual-error').removeClass('d-none');
+                        // Error case - tampilkan pesan error
+                        const errorMessage = data.message || 'Kode barang tidak valid atau tidak ditemukan.';
+                        showFlashMessage('danger', errorMessage);
+
+                        $('#manual-error').text(errorMessage).removeClass('d-none');
                         $('#manual-success').addClass('d-none');
                     }
                 })
-                .catch(() => {
-                    $('#manual-error').removeClass('d-none');
+                .catch(error => {
+                    console.error('Network error:', error);
+                    const errorMessage = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+                    showFlashMessage('danger', errorMessage);
+
+                    $('#manual-error').text(errorMessage).removeClass('d-none');
                     $('#manual-success').addClass('d-none');
                 });
         }
@@ -243,18 +267,22 @@
                             kode
                         })
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
+                    .then(async response => {
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
                             const itemRow = document.getElementById('item-' + kode);
                             if (itemRow) itemRow.remove();
                             document.getElementById('scan-result').innerText = 'Barang berhasil dihapus!';
+                            showFlashMessage('success', 'Barang berhasil dihapus dari daftar.');
                         } else {
-                            alert('Gagal menghapus barang: ' + data.message);
+                            const errorMessage = data.message || 'Gagal menghapus barang.';
+                            showFlashMessage('danger', errorMessage);
                         }
                     })
-                    .catch(() => {
-                        alert('Terjadi kesalahan saat menghapus barang.');
+                    .catch(error => {
+                        console.error('Error removing item:', error);
+                        showFlashMessage('danger', 'Terjadi kesalahan saat menghapus barang.');
                     });
             }
         }
@@ -274,7 +302,7 @@
             $('#descriptionModal').modal('hide');
         });
 
-        // Submit transaksi, kirim deskripsi transaksi ke backend
+        // Submit transaksi dengan error handling yang lebih baik
         document.getElementById('transaction-form').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -304,6 +332,13 @@
                 return;
             }
 
+            // Disable submit button sementara
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+            }
+
             fetch("{{ route('transactions.store') }}", {
                     method: 'POST',
                     headers: {
@@ -318,28 +353,68 @@
                 })
                 .then(async response => {
                     const data = await response.json();
-                    if (!response.ok) {
-                        throw data;
+
+                    // Re-enable submit button
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Simpan Transaksi';
                     }
-                    showFlashMessage('success', data.message || 'Transaksi berhasil!');
-                    setTimeout(() => {
-                        window.location.href = "{{ route('transactions.index') }}";
-                    }, 2500); // Perbesar delay agar alert terlihat
+
+                    if (response.ok && data.success !== false) {
+                        // Success case
+                        showFlashMessage('success', data.message || 'Transaksi berhasil disimpan!');
+                        setTimeout(() => {
+                            window.location.href = "{{ route('transactions.index') }}";
+                        }, 2500);
+                    } else {
+                        // Error case - 422 atau response dengan success: false
+                        const errorMessage = data.message || 'Gagal menyimpan transaksi.';
+                        showFlashMessage('danger', errorMessage);
+                    }
                 })
                 .catch(error => {
-                    const errorMessage = error?.message || 'Gagal menyimpan transaksi.';
-                    showFlashMessage('danger', errorMessage);
+                    console.error('Transaction error:', error);
+
+                    // Re-enable submit button
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Simpan Transaksi';
+                    }
+
+                    showFlashMessage('danger', 'Terjadi kesalahan jaringan. Silakan coba lagi.');
                 });
         });
 
+        // Fungsi untuk menampilkan flash message yang lebih robust
         function showFlashMessage(type, message) {
+            // Hapus alert sebelumnya
+            const existingAlert = document.querySelector('.flash-message-container .alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
             const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <strong>${type === 'success' ? 'Berhasil!' : 'Error!'}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+
             const flashContainer = document.querySelector('.flash-message-container') || createFlashMessageContainer();
             flashContainer.innerHTML = alertHtml;
+
+            // Auto-dismiss after 5 seconds for error messages
+            if (type === 'danger') {
+                setTimeout(() => {
+                    const alert = flashContainer.querySelector('.alert');
+                    if (alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            }
+
+            // Scroll to top to make sure user sees the message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function createFlashMessageContainer() {

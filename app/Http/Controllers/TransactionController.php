@@ -7,6 +7,7 @@ use App\Services\TransactionService;
 use App\Services\TransactionTypeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
@@ -42,32 +43,62 @@ class TransactionController extends Controller
         return view('frontend.transaksi.create', compact('daftarBarang', 'transactionTypes'));
     }
 
-    public function store(Request $request)
+  public function store(Request $request)
     {
         $token = session('token');
         if (!$token) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu.',
+                'error' => 'Unauthorized'
+            ], 401);
         }
 
         try {
+            // Validasi input
             $validated = $request->validate([
-                'transaction_type_id' => 'required|integer',
-                'description' => 'nullable|string',
-                'items' => 'required|array',
-                'items.*.barang_kode' => 'required|string',
+                'transaction_type_id' => 'required|integer|exists:transaction_types,id',
+                'description' => 'nullable|string|max:255',
+                'items' => 'required|array|min:1',
+                'items.*.barang_kode' => 'required|string|exists:barangs,barang_kode',
                 'items.*.quantity' => 'required|integer|min:1',
-
             ]);
 
+            // Panggil service untuk menyimpan transaksi
             $response = $this->transactionService->store($validated, $token);
 
+            if ($response['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $response['message'] ?? 'Transaksi berhasil dibuat',
+                    'data' => $response['data'] ?? null
+                ], 201);
+            }
+
+            // Jika service mengembalikan error
             return response()->json([
-                'message' => 'Transaksi berhasil dibuat',
-                'data' => $response
-            ], 201);
+                'success' => false,
+                'message' => $response['message'] ?? 'Gagal membuat transaksi',
+                'error' => $response['error'] ?? null
+            ], 422);
+
+        } catch (ValidationException $e) {
+            // Tangani error validasi
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'error' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            // Tangani error server lainnya
+            Log::error('Gagal menyimpan transaksi', [
+                'error' => $e->getMessage(),
+                'payload' => $request->all()
+            ]);
+
             return response()->json([
-                'message' => 'Gagal membuat transaksi',
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan transaksi',
                 'error' => $e->getMessage()
             ], 500);
         }

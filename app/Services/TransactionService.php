@@ -41,7 +41,7 @@ class TransactionService
         return collect();
     }
 
-    public function store(array $data, $token)
+      public function store(array $data, $token)
     {
         try {
             if (!isset($data['transaction_type_id']) || !is_array($data['items'])) {
