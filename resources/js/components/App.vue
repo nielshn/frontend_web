@@ -1,147 +1,174 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import axios from 'axios';
 
+// STATE
 const show = ref(false);
 const notifications = ref([]);
 const connected = ref(false);
 const unread = ref(0);
 const loading = ref(false);
 const markingAllRead = ref(false);
+const token = ref(null);
 
-const token = localStorage.getItem('token');
-const headers = {
-    Authorization: `Bearer ${token}`
-};
+// HEADERS
+const headers = ref({ Authorization: '' });
 
-const toggle = () => {
-    show.value = !show.value;
-};
+// PERBARUI HEADER SAAT TOKEN BERUBAH
+watch(token, (newToken) => {
+  if (newToken) {
+    headers.value.Authorization = `Bearer ${newToken}`;
+    getNotifications();
+  }
+});
 
+// TIME AGO
 const timeAgo = (date) => {
-    const mins = Math.floor((new Date() - new Date(date)) / 60000);
-    if (mins < 1) return 'baru';
-    if (mins < 60) return `${mins}m`;
-    if (mins < 1440) return `${Math.floor(mins / 60)}j`;
-    return `${Math.floor(mins / 1440)}h`;
+  const mins = Math.floor((new Date() - new Date(date)) / 60000);
+  if (mins < 1) return 'baru';
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.floor(mins / 60)}j`;
+  return `${Math.floor(mins / 1440)}h`;
 };
+
+// GET NOTIFICATIONS
 
 const getNotifications = async () => {
-    if (loading.value) return;
-    loading.value = true;
-    try {
-        const { data } = await axios.get('http://127.0.0.1:8090/api/notifikasis?limit=15', { headers });
-        notifications.value = (data?.data || data || []).map(n => ({
-            ...n,
-            time: timeAgo(n.created_at),
-        }));
-        unread.value = notifications.value.filter(n => !n.read).length;
-    } catch (e) {
-        console.error('Gagal memuat notifikasi:', e);
-        toast.error('Gagal memuat notifikasi');
-    } finally {
-        loading.value = false;
-    }
-};
-
-const markRead = async (id) => {
-    const notifIndex = notifications.value.findIndex(n => n.id === id);
-    if (notifIndex === -1 || notifications.value[notifIndex].read) return;
-
-    const originalNotification = { ...notifications.value[notifIndex] };
-    notifications.value[notifIndex].read = true;
-    unread.value = notifications.value.filter(n => !n.read).length;
-
-    try {
-        await axios.put(`http://127.0.0.1:8090/api/notifikasis/${id}/read`, {}, { headers });
-    } catch (e) {
-        notifications.value[notifIndex] = originalNotification;
-        unread.value = notifications.value.filter(n => !n.read).length;
-        toast.error('Gagal menandai notifikasi sebagai dibaca');
-    }
-};
-
-const markAllRead = async () => {
-    if (markingAllRead.value) return;
-    const originalNotifications = [...notifications.value];
-    const unreadNotifications = notifications.value.filter(n => !n.read);
-    if (unreadNotifications.length === 0) return;
-
-    markingAllRead.value = true;
-    notifications.value = notifications.value.map(n => ({ ...n, read: true }));
-    unread.value = 0;
-
-    try {
-        await axios.put('http://127.0.0.1:8090/api/notifikasi/read-all', {}, { headers });
-        toast.success('Semua notifikasi telah ditandai sebagai dibaca');
-    } catch (e) {
-        notifications.value = originalNotifications;
-        unread.value = originalNotifications.filter(n => !n.read).length;
-        toast.error('Gagal menandai semua notifikasi sebagai dibaca');
-    } finally {
-        markingAllRead.value = false;
-    }
-};
-
-const handleNotification = (data) => {
-    const n = {
-        ...data,
-        id: data.id || Date.now(),
-        time: 'baru',
-        read: false,
-    };
-    notifications.value.unshift(n);
-    unread.value++;
-    toast(`${n.title}: ${n.message}`, {
-        type: 'warning',
-        autoClose: 4000,
-        position: 'top-right'
+  if (loading.value || !token.value) return;
+  console.log('🔄 Memulai fetch notifikasi...');
+  loading.value = true;
+  try {
+    const { data } = await axios.get('http://127.0.0.1:8090/api/notifikasis?limit=15', {
+      headers: headers.value
     });
+
+    console.log('✅ Notifikasi diterima:', data);
+    notifications.value = (data?.data || data || []).map(n => ({
+      ...n,
+      read: n.read === 1 || n.read === true,
+      time: timeAgo(n.created_at),
+    }));
+    unread.value = notifications.value.filter(n => !n.read).length;
+  } catch (e) {
+    console.error('❌ Gagal memuat notifikasi:', e);
+    toast.error('Gagal memuat notifikasi');
+  } finally {
+    loading.value = false;
+  }
 };
 
-const handleNotificationClick = (notification) => {
-    if (!notification.read) {
-        markRead(notification.id);
-    }
+// MARK SINGLE
+const markRead = async (id) => {
+  const index = notifications.value.findIndex(n => n.id === id);
+  if (index === -1 || notifications.value[index].read) return;
+
+  const original = { ...notifications.value[index] };
+  notifications.value[index].read = true;
+  unread.value--;
+
+  try {
+    await axios.put(`http://127.0.0.1:8090/api/notifikasis/${id}/read`, {}, {
+      headers: headers.value,
+    });
+  } catch (e) {
+    notifications.value[index] = original;
+    unread.value++;
+    toast.error('Gagal menandai notifikasi sebagai dibaca');
+  }
 };
 
-const closeDropdown = () => {
-    show.value = false;
+// MARK ALL
+const markAllRead = async () => {
+  if (markingAllRead.value || unread.value === 0) return;
+
+  const original = [...notifications.value];
+  notifications.value = notifications.value.map(n => ({ ...n, read: true }));
+  unread.value = 0;
+  markingAllRead.value = true;
+
+  try {
+    await axios.put('http://127.0.0.1:8090/api/notifikasi/read-all', {}, {
+      headers: headers.value,
+    });
+    toast.success('Semua notifikasi ditandai sebagai dibaca');
+  } catch (e) {
+    notifications.value = original;
+    unread.value = original.filter(n => !n.read).length;
+    toast.error('Gagal menandai semua notifikasi');
+  } finally {
+    markingAllRead.value = false;
+  }
 };
 
+// HANDLE BROADCAST
+const handleNotification = (data) => {
+  const n = {
+    ...data,
+    id: data.id || Date.now(),
+    time: 'baru',
+    read: false,
+  };
+  notifications.value.unshift(n);
+  unread.value++;
+  toast(`${n.title}: ${n.message}`, {
+    type: 'warning',
+    autoClose: 4000,
+    position: 'top-right'
+  });
+};
+
+// KLIK NOTIF
+const handleNotificationClick = (notif) => {
+  if (!notif.read) markRead(notif.id);
+};
+
+// TOGGLE DROPDOWN
+const toggle = () => show.value = !show.value;
+const closeDropdown = () => show.value = false;
+
+// CLICK OUTSIDE
 const handleClickOutside = (event) => {
-    if (show.value && !event.target.closest('.notification-wrapper')) {
-        closeDropdown();
-    }
+  if (show.value && !event.target.closest('.notification-wrapper')) {
+    closeDropdown();
+  }
 };
 
+// MOUNTED
 let echo = null;
 let intervalId = null;
 
 onMounted(() => {
-    getNotifications();
-
-    if (window.Echo) {
-        window.Echo.connector.pusher.connection.bind('connected', () => {
-            connected.value = true;
-        });
-        window.Echo.connector.pusher.connection.bind('disconnected', () => {
-            connected.value = false;
-        });
-
-        echo = window.Echo.channel('stock-channel').listen('.stock.minimum', handleNotification);
+  setTimeout(() => {
+    token.value = window.laravelToken || localStorage.getItem('token');
+    if (token.value) {
+      localStorage.setItem('token', token.value);
+    } else {
+      toast.error('Token tidak ditemukan. Silakan login kembali.');
+      return;
     }
+  }, 300); // Delay agar token dari Laravel sempat dimasukkan
 
-    intervalId = setInterval(getNotifications, 60000);
-    document.addEventListener('click', handleClickOutside);
+  if (window.Echo) {
+    window.Echo.connector.pusher.connection.bind('connected', () => connected.value = true);
+    window.Echo.connector.pusher.connection.bind('disconnected', () => connected.value = false);
+
+    echo = window.Echo.channel('stock-channel')
+      .listen('.stock.minimum', handleNotification);
+  }
+
+  intervalId = setInterval(() => {
+    if (headers.value.Authorization) getNotifications();
+  }, 60000);
+
+  document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
-    if (echo) echo.stopListening('.stock.minimum');
-    if (intervalId) clearInterval(intervalId);
-    document.removeEventListener('click', handleClickOutside);
+  if (echo) echo.stopListening('.stock.minimum');
+  if (intervalId) clearInterval(intervalId);
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 

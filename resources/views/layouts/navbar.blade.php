@@ -9,7 +9,7 @@
 
         <div class="navbar-brand flex-1 flex-lg-0">
             <a href="{{ route('dashboard') }}" class="d-inline-flex align-items-center">
-                <img src="{{$web['web_logo'] }}" alt="" style="height: 24px;">
+                <img src="{{ $web['web_logo'] }}" alt="" style="height: 24px;">
                 <h6 class="ms-2 mb-0 text-light ultra-regular" style="line-height: 1;">{{ $web['web_nama'] }}</h6>
             </a>
         </div>
@@ -25,13 +25,16 @@
         </ul> --}}
         <ul class="nav flex-row justify-content-end order-1 order-lg-2">
             @vite(['resources/css/app.css', 'resources/js/app.js'])
-             <div id="app"></div>
+            <script>
+                window.laravelToken = "{{ session('token') }}";
+            </script>
+            <div id="app"></div>
 
             <li class="nav-item nav-item-dropdown-lg dropdown ms-lg-2">
                 <a href="#" class="navbar-nav-link align-items-center rounded-pill p-1" data-bs-toggle="dropdown">
                     <div class="status-indicator-container">
                         <img src="{{ !empty($user['avatar']) ? $user['avatar'] : Avatar::create($user['name'] ?? 'User')->toBase64() }}"
-        class="w-32px h-32px rounded-pill" alt="">
+                            class="w-32px h-32px rounded-pill" alt="">
                         <span class="status-indicator bg-success"></span>
                     </div>
                     <span class="d-none d-lg-inline-block mx-lg-2"> {{ $user['name'] }}</span>

@@ -431,4 +431,5 @@
         calendar.render();
     });
 </script>
+
 @endpush

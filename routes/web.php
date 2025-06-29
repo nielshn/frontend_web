@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth.token')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login')->middleware('guest');
     Route::post('/login', [AuthController::class, 'handleLogin'])->name('post.login')->middleware('guest');
+    Route::post('/frontend-login', [AuthController::class, 'frontendLogin']);
+
 });
 
 
