@@ -1,3 +1,8 @@
+@php
+    $webService = app(\App\Services\WebService::class);
+    $response = $webService->getById(session('token'), 1);
+    $web = (array) ($response->data ?? $response);
+@endphp
 <!-- Main navbar -->
 <div class="navbar navbar-dark navbar-expand-lg navbar-static border-bottom border-bottom-white border-opacity-10">
     <div class="container-fluid">

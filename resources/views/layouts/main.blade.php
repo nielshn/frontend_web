@@ -1,3 +1,8 @@
+@php
+    $webService = app(\App\Services\WebService::class);
+    $response = $webService->getById(session('token'), 1);
+    $web = (array) ($response->data ?? $response);
+@endphp
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 

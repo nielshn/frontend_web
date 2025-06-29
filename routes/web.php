@@ -41,11 +41,10 @@ Route::middleware('auth.session')->group(function () {
     })->middleware('refresh.permissions');
 
     Route::get('/user_profile', [ProfileController::class, 'index'])->name('profile.user_profile');
-    Route::get('/user_profile/change-password', [ProfileController::class, 'changePassword'])
-        ->name('profile.changePassword');
 
-    Route::get('/user_profile/change-password/create', [ProfileController::class, 'changePassword'])
-        ->name('users.changePassword'); // alias agar tidak error
+    Route::get('/user_profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
+    Route::post('/user_profile/change-password/create', [ProfileController::class, 'changeePassword'])->name('users.changePassword'); // alias agar tidak error
+
     Route::put('profile/update-email', [ProfileController::class, 'updateEmail'])->name('profile.update-email');
     Route::put('/profile/update-user', [ProfileController::class, 'updateUser'])->name('profile.update-user');
 

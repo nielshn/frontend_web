@@ -3,12 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Services\AuthService;
-use App\Services\WebService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,9 +26,9 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $token = session('token');
             $keys = $this->getPermissionKeys();
+
             $defaultData = [
                 'user' => [],
-                'web' => null,
                 'permissions' => [],
             ];
             $defaultFlags = array_fill_keys($keys, false);
@@ -40,10 +38,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             try {
-                $user = $this->getCachedUser($token);
-                $web = $this->getCachedWeb($token);
-                $permissions = $user['permissions'] ?? [];
+                // Cek apakah user sudah diset di app container agar tidak dipanggil 2x
+                if (!app()->bound('active_user')) {
+                    $user = app(AuthService::class)->getUserInfo($token);
+                    app()->instance('active_user', $user); // simpan ke container
+                    session(['user' => $user]); // optional, simpan juga di session
+                } else {
+                    $user = app('active_user');
+                }
 
+                $permissions = $user['permissions'] ?? [];
                 $flags = $this->generatePermissionsFlags(
                     array_map(fn($p) => is_array($p) ? $p['name'] : $p, $permissions),
                     $keys
@@ -51,7 +55,6 @@ class AppServiceProvider extends ServiceProvider
 
                 return $view->with(array_merge([
                     'user' => $user,
-                    'web' => $web
                 ], $flags));
             } catch (\Exception $e) {
                 Log::error('View composer error: ' . $e->getMessage());
@@ -65,34 +68,22 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('can', function ($permission) {
             try {
                 $token = session('token');
-                if (!$token) {
-                    return false;
+                if (!$token) return false;
+
+                if (!app()->bound('active_user')) {
+                    $user = app(AuthService::class)->getUserInfo($token);
+                    app()->instance('active_user', $user); // cache per request
+                    session(['user' => $user]); // optional
+                } else {
+                    $user = app('active_user');
                 }
 
-                $user = $this->getCachedUser($token);
-                return in_array($permission, $user['permissions'] ?? []);
+                $permissions = array_map(fn($p) => is_array($p) ? $p['name'] : $p, $user['permissions'] ?? []);
+                return in_array($permission, $permissions);
             } catch (\Exception $e) {
                 Log::error('Blade directive error: ' . $e->getMessage());
                 return false;
             }
-        });
-    }
-
-    private function getCachedUser(string $token): array
-    {
-        $key = 'user_info_' . md5($token);
-
-        return Cache::remember($key, 300, function () use ($token) {
-            return app(AuthService::class)->getUserInfo($token);
-        });
-    }
-
-    private function getCachedWeb(string $token): mixed
-    {
-        $key = 'web_info_' . md5($token);
-
-        return Cache::remember($key, 300, function () use ($token) {
-            return app(WebService::class)->getById($token, 1);
         });
     }
 

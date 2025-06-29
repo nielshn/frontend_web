@@ -9,6 +9,8 @@
                     <th>Gambar</th>
                     <th>Kategori Barang</th>
                     <th>Stok Tersedia</th>
+                    <th>Stok Peminjaman</th>
+                    <th>Stok Maintanace</th>
                     <th>Jumlah</th>
                     <th>Aksi</th>
                 </tr>

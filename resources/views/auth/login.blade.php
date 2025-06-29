@@ -1,3 +1,8 @@
+@php
+    $webService = app(\App\Services\WebService::class);
+    $response = $webService->getById(session('token'), 1);
+    $web = (array) ($response->data ?? $response);
+@endphp
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 
@@ -5,8 +10,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    {{-- <link rel="icon" href="{{ asset($web['web_logo']) }}" type="image/png"> --}}
-    {{-- <title>{{ $web['web_nama'] }}</title> --}}
+    <link rel="icon" href="{{ asset($web['web_logo']) }}" type="image/png">
+    <title>{{ $web['web_nama'] }}</title>
     <!-- Global stylesheets -->
     <link href="{{ asset('template/assets/fonts/inter/inter.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('template/assets/icons/phosphor/styles.min.css') }}" rel="stylesheet" type="text/css">
@@ -42,7 +47,7 @@
                                 <div class="text-center mb-4">
 
 
-    {{-- <img src="{{ $web['web_logo'] }}" class="h-48px mb-2" alt="Logo"> --}}
+    <img src="{{ $web['web_logo'] }}" class="h-48px mb-2" alt="Logo">
 
                                     <h3 class="fw-semibold mb-0">Login</h3>
                                     <small class="text-muted">Masukkan kredensial Anda di bawah ini</small>
