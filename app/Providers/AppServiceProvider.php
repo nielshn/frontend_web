@@ -19,9 +19,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // if(config('app.env') === 'local') {
-        //     \Illuminate\Support\Facades\URL::forceScheme('https');
-        // }
         $this->registerViewComposer();
         $this->registerBladeDirective();
     }
@@ -43,18 +40,14 @@ class AppServiceProvider extends ServiceProvider
             }
 
             try {
-
-                $user = app(AuthService::class)->getUserInfo($token); // ✅ ambil data user
-                session(['user' => $user]);
+                $user = $this->getCachedUser($token);
                 $web = $this->getCachedWeb($token);
                 $permissions = $user['permissions'] ?? [];
-                // dd($web);
 
                 $flags = $this->generatePermissionsFlags(
                     array_map(fn($p) => is_array($p) ? $p['name'] : $p, $permissions),
                     $keys
                 );
-                // dd($user);
 
                 return $view->with(array_merge([
                     'user' => $user,
@@ -72,9 +65,11 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('can', function ($permission) {
             try {
                 $token = session('token');
-                if (!$token) return false;
+                if (!$token) {
+                    return false;
+                }
 
-                $user = app(AuthService::class)->getUserInfo($token); // Ambil ulang user via service
+                $user = $this->getCachedUser($token);
                 return in_array($permission, $user['permissions'] ?? []);
             } catch (\Exception $e) {
                 Log::error('Blade directive error: ' . $e->getMessage());
@@ -83,13 +78,20 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
+    private function getCachedUser(string $token): array
+    {
+        $key = 'user_info_' . md5($token);
 
+        return Cache::remember($key, 300, function () use ($token) {
+            return app(AuthService::class)->getUserInfo($token);
+        });
+    }
 
     private function getCachedWeb(string $token): mixed
     {
         $key = 'web_info_' . md5($token);
 
-        return Cache::remember($key, 30, function () use ($token) {
+        return Cache::remember($key, 300, function () use ($token) {
             return app(WebService::class)->getById($token, 1);
         });
     }

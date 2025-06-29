@@ -44,69 +44,33 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
-           $token = session('token');
-    if (!$token) {
-        return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
-    }
-
-    try {
-        $validated = $request->validate([
-            'transaction_type_id' => 'required|integer',
-            'description' => 'nullable|string',
-            'items' => 'required|array',
-            'items.*.barang_kode' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
-
-        $response = $this->transactionService->store($validated, $token);
-
-        if ($response['success']) {
-            // HTTP 200/201 - Berhasil
-            return redirect()->route('transactions.index')
-                ->with('success', $response['message']);
-        } else {
-            // HTTP 422, 400, dll - Gagal
-            $statusCode = $response['status_code'] ?? null;
-
-            switch ($statusCode) {
-                case 422:
-                    // Business logic error (e.g., stok tidak mencukupi)
-                    return redirect()->back()
-                        ->with('error', $response['message'])
-                        ->withInput();
-
-                case 401:
-                    // Unauthorized - redirect ke login
-                    return redirect()->route('login')
-                        ->with('error', 'Sesi Anda telah berakhir, silakan login kembali');
-
-                case 403:
-                    // Forbidden
-                    return redirect()->back()
-                        ->with('error', 'Tidak memiliki izin untuk melakukan aksi ini')
-                        ->withInput();
-
-                default:
-                    // Error lainnya
-                    return redirect()->back()
-                        ->with('error', $response['message'] ?? 'Terjadi kesalahan')
-                        ->withInput();
-            }
+        $token = session('token');
+        if (!$token) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        // Validation errors
-        return redirect()->back()
-            ->with('error', 'Data yang dimasukkan tidak valid')
-            ->withErrors($e->errors())
-            ->withInput();
+        try {
+            $validated = $request->validate([
+                'transaction_type_id' => 'required|integer',
+                'description' => 'nullable|string',
+                'items' => 'required|array',
+                'items.*.barang_kode' => 'required|string',
+                'items.*.quantity' => 'required|integer|min:1',
 
-    } catch (\Exception $e) {
-        // General errors
-        return redirect()->back()
-            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-            ->withInput();
-    }
+            ]);
+
+            $response = $this->transactionService->store($validated, $token);
+
+            return response()->json([
+                'message' => 'Transaksi berhasil dibuat',
+                'data' => $response
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal membuat transaksi',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // public function

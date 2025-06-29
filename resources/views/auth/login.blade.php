@@ -50,7 +50,7 @@
 
                                 <!-- Flash messages -->
                                 @if (session('error_message'))
-                                    <div class="alert alert-danger text-center">
+                                    <div class="alert alert-danger text-center">e
                                         {{ session('error_message') }}
                                     </div>
                                 @endif
