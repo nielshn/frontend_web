@@ -48,15 +48,32 @@ class BarangController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        try {
-            $this->barang_service->createBarang($request->all());
-            return redirect()->back()->with('success', 'Barang berhasil ditambahkan.');
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Gagal menambahkan barang: ' . $th->getMessage());
+public function store(Request $request)
+{
+    try {
+        $this->barang_service->createBarang($request->all());
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Barang berhasil ditambahkan.'
+            ]);
         }
+
+        return redirect()->back()->with('success', 'Barang berhasil ditambahkan.');
+    } catch (\Throwable $th) {
+        $message = 'Gagal menambahkan barang: ' . $th->getMessage();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $message
+            ], 500);
+        }
+
+        return redirect()->back()->with('error', $message);
     }
+}
 
     public function show($id)
     {

@@ -32,7 +32,7 @@ class UserRepository
 
         return 0;
     }
-    public function all()
+    public function all() 
     {
         return $this->withToken()->get("{$this->apiBaseUrl}/users");
     }
