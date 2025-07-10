@@ -20,16 +20,17 @@ class AuthController extends Controller
         $this->webService = $webService;
     }
 
- public function showLoginForm()
-{
-    $web = $this->webService->getBy(1);
+    public function showLoginForm()
+    {
+        $web = $this->webService->getBy(1);
+        // dd($web);
 
-    if (!$web) {
-        abort(404, 'Data tidak ditemukan');
+        if (!$web) {
+            abort(404, 'Data tidak ditemukan');
+        }
+
+        return view('auth.login', compact('web'));
     }
-
-    return view('auth.login',compact('web'));
-}
 
     public function handleLogin(Request $request)
     {

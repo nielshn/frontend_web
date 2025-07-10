@@ -7,7 +7,8 @@
             <div class="flash-message-container"></div>
 
             <!-- Modal Deskripsi Transaksi -->
-            <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+            <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -414,7 +415,10 @@
                 }
 
                 // Scroll to top to make sure user sees the message
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             }
 
             function createFlashMessageContainer() {

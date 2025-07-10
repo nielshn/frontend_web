@@ -25,7 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('*', function ($view) {
             $token = session('token');
-            dd($token);
             $keys = $this->getPermissionKeys();
 
             $defaultData = [

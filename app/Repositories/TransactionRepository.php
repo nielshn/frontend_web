@@ -29,7 +29,7 @@ class TransactionRepository
             return [
                 'success' => false,
                 'message' => $response->json('message') ?? 'Terjadi kesalahan saat menyimpan transaksi.',
-            ];  
+            ];
         } catch (\Exception $e) {
             Log::error('API CreateTransaction Error', [
                 'error' => $e->getMessage(),
@@ -68,35 +68,33 @@ class TransactionRepository
     }
 
     public function update($kode, array $payload, $token): array
-{
-    try {
-        $payload['items'] = array_values($payload['items']); // pastikan array numerik
-        $response = Http::withToken($token)
-            ->asJson()
-            ->put("{$this->baseUrl}/{$kode}", $payload);
+    {
+        try {
+            $payload['items'] = array_values($payload['items']); // pastikan array numerik
+            $response = Http::withToken($token)
+                ->asJson()
+                ->put("{$this->baseUrl}/{$kode}", $payload);
 
-        if ($response->successful()) {
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json('data'),
+                    'message' => $response->json('message'),
+                ];
+            }
+
             return [
-                'success' => true,
-                'data' => $response->json('data'),
-                'message' => $response->json('message'),
+                'success' => false,
+                'message' => $response->json('message') ?? 'Gagal memperbarui transaksi.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Gagal terhubung ke API untuk memperbarui transaksi.',
             ];
         }
-
-        return [
-            'success' => false,
-            'message' => $response->json('message') ?? 'Gagal memperbarui transaksi.',
-        ];
-    } catch (\Exception $e) {
-        return [
-            'success' => false,
-            'message' => 'Gagal terhubung ke API untuk memperbarui transaksi.',
-        ];
     }
-
-
-    }
-        public function checkAndParseBarang($token, string $kode)
+    public function checkAndParseBarang($token, string $kode)
     {
         $response = Http::withToken($token)->get("{$this->baseUrl}/check-barcode/{$kode}");
 

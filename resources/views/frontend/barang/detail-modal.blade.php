@@ -75,8 +75,18 @@
                                     <li class="list-group-item">
                                         <strong>{{ $gudang['name'] }}</strong> - Stok Tersedia:
                                         {{ $gudang['stok_tersedia'] }}
-                                        - Dipinjam: {{ $gudang['stok_dipinjam'] }} - Maintenance:
-                                        {{ $gudang['stok_maintenance'] }}
+                                        - Dipinjam:
+                                        @if (($barang['category'] ?? '') == 'habis pakai')
+                                            -
+                                        @else
+                                            {{ $gudang['stok_dipinjam'] ?? 0 }}
+                                        @endif
+                                        - Maintenance:
+                                        @if (($barang['category'] ?? '') == 'habis pakai')
+                                            -
+                                        @else
+                                            {{ $gudang['stok_maintenance'] ?? 0 }}
+                                        @endif
                                     </li>
                                 @endforeach
                             </ul>

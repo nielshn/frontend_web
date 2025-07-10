@@ -44,7 +44,7 @@ class TransactionController extends Controller
         return view('frontend.transaksi.create', compact('daftarBarang', 'transactionTypes'));
     }
 
-  public function store(Request $request)
+    public function store(Request $request)
     {
         $token = session('token');
         if (!$token) {
@@ -82,7 +82,6 @@ class TransactionController extends Controller
                 'message' => $response['message'] ?? 'Gagal membuat transaksi',
                 'error' => $response['error'] ?? null
             ], 422);
-
         } catch (ValidationException $e) {
             // Tangani error validasi
             return response()->json([
@@ -164,20 +163,20 @@ class TransactionController extends Controller
         return response()->json($filteredBarang);
     }
     public function update(Request $request, $kode)
-{
-    $token = session('token');
-    if (!$token) {
-        return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
-    }
+    {
+        $token = session('token');
+        if (!$token) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
 
-    $response = $this->transactionService->update($kode, $request->all(), $token);
+        $response = $this->transactionService->update($kode, $request->all(), $token);
 
-    if ($response['success']) {
-        // Redirect back dengan pesan sukses
-        return redirect()->back()->with('success', $response['message']);
-    } else {
-        // Redirect back dengan pesan error
-        return redirect()->back()->with('error', $response['message']);
+        if ($response['success']) {
+            // Redirect back dengan pesan sukses
+            return redirect()->back()->with('success', $response['message']);
+        } else {
+            // Redirect back dengan pesan error
+            return redirect()->back()->with('error', $response['message']);
+        }
     }
-}
 }

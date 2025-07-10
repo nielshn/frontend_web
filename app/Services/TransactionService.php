@@ -41,7 +41,7 @@ class TransactionService
         return collect();
     }
 
-      public function store(array $data, $token)
+    public function store(array $data, $token)
     {
         try {
             if (!isset($data['transaction_type_id']) || !is_array($data['items'])) {
@@ -93,42 +93,41 @@ class TransactionService
     }
 
     public function checkAndAddBarang($token, string $kode, array $currentItems): array
-{
-    $result = $this->transactionRepository->checkAndParseBarang($token, $kode);
+    {
+        $result = $this->transactionRepository->checkAndParseBarang($token, $kode);
 
-    if (!$result['success']) {
+        if (!$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'],
+            ];
+        }
+
+        $barang = $result['data'];
+
+        // Pastikan semua informasi tambahan tersedia
+        $barangKode = $barang['barang_kode'];
+
+        if (isset($currentItems[$barangKode])) {
+            $currentItems[$barangKode]['jumlah'] += 1;
+        } else {
+            $currentItems[$barangKode] = [
+                'nama' => $barang['barang_nama'],
+                'kode' => $barang['barang_kode'],
+                'jumlah' => 1,
+                'kategoribarang' => $barang['kategori'],
+                'stok_tersedia' => $barang['stok_tersedia'],
+                'stok_dipinjam' => $barang['stok_dipinjam'] ?? 0,
+                'stok_maintenance' => $barang['stok_maintenance'] ?? 0,
+                'gambar' => $barang['gambar'],
+            ];
+        }
+
         return [
-            'success' => false,
-            'message' => $result['message'],
+            'success' => true,
+            'data' => $currentItems,
         ];
     }
-
-    $barang = $result['data'];
-
-    // Pastikan semua informasi tambahan tersedia
-    $barangKode = $barang['barang_kode'];
-
-    if (isset($currentItems[$barangKode])) {
-        $currentItems[$barangKode]['jumlah'] += 1;
-    } else {
-        $currentItems[$barangKode] = [
-            'nama' => $barang['barang_nama'],
-            'kode' => $barang['barang_kode'],
-            'jumlah' => 1,
-            'kategoribarang' => $barang['kategori'],
-            'stok_tersedia' => $barang['stok_tersedia'],
-            'stok_dipinjam' => $barang['stok_dipinjam'] ?? 0,
-            'stok_maintenance' => $barang['stok_maintenance'] ?? 0,
-            'gambar' => $barang['gambar'],
-        ];
-
-    }
-
-    return [
-        'success' => true,
-        'data' => $currentItems,
-    ];
-}
 
     public function resetDaftarBarang(): array
     {

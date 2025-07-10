@@ -37,7 +37,8 @@
                         'id' => request('transaction_type_id'),
                         'start_date' => request('start_date'),
                         'end_date' => request('end_date'),
-                    ]) }}" class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
+                    ]) }}"
+                        class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
                         <i class="ph-file-pdf"></i> Laporan PDF
                         ({{ $transactionTypes->firstWhere('id', request('transaction_type_id'))['name'] ?? 'Per Jenis' }})
                     </a>
@@ -45,7 +46,8 @@
                     <a href="{{ route('transactions.exportPdf', [
                         'start_date' => request('start_date'),
                         'end_date' => request('end_date'),
-                    ]) }}" class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
+                    ]) }}"
+                        class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
                         <i class="ph-file-pdf"></i> Laporan PDF (Semua)
                     </a>
                 @endif
@@ -56,7 +58,8 @@
                         'id' => request('transaction_type_id'),
                         'start_date' => request('start_date'),
                         'end_date' => request('end_date'),
-                    ]) }}" class="btn btn-outline-success btn-sm w-100 w-sm-auto" target="_blank">
+                    ]) }}"
+                        class="btn btn-outline-success btn-sm w-100 w-sm-auto" target="_blank">
                         <i class="icon-file-excel"></i> Laporan Excel
                         ({{ $transactionTypes->firstWhere('id', request('transaction_type_id'))['name'] ?? 'Per Jenis' }})
                     </a>
@@ -64,7 +67,8 @@
                     <a href="{{ route('transactions.exportExcel', [
                         'start_date' => request('start_date'),
                         'end_date' => request('end_date'),
-                    ]) }}" class="btn btn-outline-success btn-sm w-100 w-sm-auto" target="_blank">
+                    ]) }}"
+                        class="btn btn-outline-success btn-sm w-100 w-sm-auto" target="_blank">
                         <i class="icon-file-excel"></i> Laporan Excel (Semua)
                     </a>
                 @endif
@@ -97,11 +101,7 @@
                             <td>{{ $trx['user']['name'] ?? '-' }}</td>
                             <td>{{ count($trx['items']) }}</td>
                             <td>
-                                <ul class="mb-0 ps-3">
-                                    @foreach ($trx['items'] as $item)
-                                        <li>{{ $item['gudang']['nama'] ?? '-' }}</li>
-                                    @endforeach
-                                </ul>
+                                {{ $trx['items'][0]['gudang']['nama'] ?? '-' }}
                             </td>
                             <td>
                                 <ul class="mb-0 ps-3">
@@ -119,19 +119,20 @@
                             </td>
                             <td class="text-center">
                                 <a href="#" class="text-info" data-bs-toggle="modal"
-                                   data-bs-target="#deskripsiModal{{ $key }}" title="Lihat Deskripsi">
+                                    data-bs-target="#deskripsiModal{{ $key }}" title="Lihat Deskripsi">
                                     <i class="bi bi-eye-fill fs-5"></i>
                                 </a>
 
                                 <!-- Modal -->
                                 <div class="modal fade" id="deskripsiModal{{ $key }}" tabindex="-1"
-                                     aria-labelledby="deskripsiModalLabel{{ $key }}" aria-hidden="true">
+                                    aria-labelledby="deskripsiModalLabel{{ $key }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="deskripsiModalLabel{{ $key }}">Deskripsi Transaksi</h5>
+                                                <h5 class="modal-title" id="deskripsiModalLabel{{ $key }}">
+                                                    Deskripsi Transaksi</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
+                                                    aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body">
                                                 {{ $trx['description'] ?? 'Tidak ada deskripsi.' }}

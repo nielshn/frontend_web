@@ -1,4 +1,3 @@
-{{-- filepath: d:\Tugas Akhir\Frontend-main\resources\views\frontend\Laporan\LaporanStok.blade.php --}}
 @extends('layouts.main')
 
 @section('content')
@@ -10,10 +9,12 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
             <h5 class="mb-0 w-100 w-sm-auto">Laporan Stok Barang</h5>
             <div class="d-flex gap-2 flex-wrap w-100 w-sm-auto">
-                <a href="{{ route('laporan.stok.exportPDF') }}" class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
+                <a href="{{ route('laporan.stok.exportPDF') }}"
+                    class="btn btn-outline-danger btn-sm w-100 w-sm-auto mb-2 mb-sm-0" target="_blank">
                     <i class="ph-file-pdf"></i> Laporan PDF
                 </a>
-                <a href="{{ route('laporan.stok.exportExcel') }}" class="btn btn-outline-success btn-sm w-100 w-sm-auto" target="_blank">
+                <a href="{{ route('laporan.stok.exportExcel') }}" class="btn btn-outline-success btn-sm w-100 w-sm-auto"
+                    target="_blank">
                     <i class="icon-file-excel"></i> Laporan Excel
                 </a>
             </div>
@@ -45,15 +46,28 @@
                                     <td>{{ $barang['category'] ?? '-' }}</td>
                                     <td>
                                         @if (!empty($barang['barang_gambar']))
-                                            <img src="{{ $barang['barang_gambar'] }}" class="img-thumbnail" width="80" alt="Gambar Barang">
+                                            <img src="{{ $barang['barang_gambar'] }}" class="img-thumbnail" width="80"
+                                                alt="Gambar Barang">
                                         @else
                                             <span class="text-muted">Tidak ada gambar</span>
                                         @endif
                                     </td>
                                     <td>{{ $gudang['name'] ?? '-' }}</td>
                                     <td>{{ $gudang['stok_tersedia'] ?? 0 }}</td>
-                                    <td>{{ $gudang['stok_maintenance'] ?? 0 }}</td>
-                                    <td>{{ $gudang['stok_dipinjam'] ?? 0 }}</td>
+                                    <td>
+                                        @if (($barang['category'] ?? '') == 'habis pakai')
+                                            -
+                                        @else
+                                            {{ $gudang['stok_maintenance'] ?? 0 }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if (($barang['category'] ?? '') == 'habis pakai')
+                                            -
+                                        @else
+                                            {{ $gudang['stok_dipinjam'] ?? 0 }}
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         @else
@@ -64,7 +78,8 @@
                                 <td>{{ $barang['category'] ?? '-' }}</td>
                                 <td>
                                     @if (!empty($barang['barang_gambar']))
-                                        <img src="{{ $barang['barang_gambar'] }}" class="img-thumbnail" width="80" alt="Gambar Barang">
+                                        <img src="{{ $barang['barang_gambar'] }}" class="img-thumbnail" width="80"
+                                            alt="Gambar Barang">
                                     @else
                                         <span class="text-muted">Tidak ada gambar</span>
                                     @endif

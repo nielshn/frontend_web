@@ -12,8 +12,20 @@
     </td>
     <td class="text-center">{{ $barang['kategoribarang'] }}</td>
     <td class="text-center">{{ $barang['stok_tersedia'] }}</td>
-        <td class="text-center">{{ $barang['stok_dipinjam'] }}</td>
-    <td class="text-center">{{ $barang['stok_maintenance'] }}</td>
+    <td class="text-center">
+        @if ($barang['kategoribarang'] == 'habis pakai')
+            -
+        @else
+            {{ $barang['stok_dipinjam'] ?? 0 }}
+        @endif
+    </td>
+    <td class="text-center">
+        @if ($barang['kategoribarang'] == 'habis pakai')
+            -
+        @else
+            {{ $barang['stok_maintenance'] ?? 0 }}
+        @endif
+    </td>
 
     <td class="text-center">
         <input type="number" name="quantities[{{ $barang['kode'] }}]" id="jumlah-{{ $barang['kode'] }}"

@@ -1,10 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
-import axios from 'axios';
+import { ref, onMounted, onUnmounted, watch } from "vue";
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
+import axios from "axios";
 
-// STATE
+// === CONSTANTS ===
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+// === STATE ===
 const show = ref(false);
 const notifications = ref([]);
 const connected = ref(false);
@@ -12,172 +15,178 @@ const unread = ref(0);
 const loading = ref(false);
 const markingAllRead = ref(false);
 const token = ref(null);
+const headers = ref({ Authorization: "" });
 
-// HEADERS
-const headers = ref({ Authorization: '' });
+// === UTILS ===
+const timeAgo = (date) => {
+    const mins = Math.floor((Date.now() - new Date(date)) / 60000);
+    if (mins < 1) return "baru";
+    if (mins < 60) return `${mins}m`;
+    if (mins < 1440) return `${Math.floor(mins / 60)}j`;
+    return `${Math.floor(mins / 1440)}h`;
+};
 
-// PERBARUI HEADER SAAT TOKEN BERUBAH
+// === API CALLS ===
+const getNotifications = async () => {
+    if (loading.value || !token.value) return;
+    loading.value = true;
+    try {
+        const { data } = await axios.get(
+            `${API_BASE_URL}/notifikasis?limit=15`,
+            { headers: headers.value }
+        );
+        notifications.value = (data?.data || data || []).map((n) => ({
+            ...n,
+            read: n.read === 1 || n.read === true,
+            time: timeAgo(n.created_at),
+        }));
+        unread.value = notifications.value.filter((n) => !n.read).length;
+    } catch (e) {
+        toast.error("Gagal memuat notifikasi");
+    } finally {
+        loading.value = false;
+    }
+};
+
+const markRead = async (id) => {
+    const index = notifications.value.findIndex((n) => n.id === id);
+    if (index === -1 || notifications.value[index].read) return;
+
+    const original = { ...notifications.value[index] };
+    notifications.value[index].read = true;
+    unread.value--;
+
+    try {
+        await axios.put(
+            `${API_BASE_URL}/notifikasis/${id}/read`,
+            {},
+            { headers: headers.value }
+        );
+    } catch (e) {
+        notifications.value[index] = original;
+        unread.value++;
+        toast.error("Gagal menandai notifikasi sebagai dibaca");
+    }
+};
+
+const markAllRead = async () => {
+    if (markingAllRead.value || unread.value === 0) return;
+
+    const original = [...notifications.value];
+    notifications.value = notifications.value.map((n) => ({
+        ...n,
+        read: true,
+    }));
+    unread.value = 0;
+    markingAllRead.value = true;
+
+    try {
+        await axios.put(
+            `${API_BASE_URL}/notifikasi/read-all`,
+            {},
+            { headers: headers.value }
+        );
+        toast.success("Semua notifikasi ditandai sebagai dibaca");
+    } catch (e) {
+        notifications.value = original;
+        unread.value = original.filter((n) => !n.read).length;
+        toast.error("Gagal menandai semua notifikasi");
+    } finally {
+        markingAllRead.value = false;
+    }
+};
+
+// === HANDLERS ===
+const handleNotification = (data) => {
+    const n = {
+        ...data,
+        id: data.id || Date.now(),
+        time: "baru",
+        read: false,
+    };
+    notifications.value.unshift(n);
+    unread.value++;
+    toast(`${n.title}: ${n.message}`, {
+        type: "warning",
+        autoClose: 4000,
+        position: "top-right",
+    });
+};
+
+const handleNotificationClick = (notif) => {
+    if (!notif.read) markRead(notif.id);
+};
+
+const toggle = () => (show.value = !show.value);
+const closeDropdown = () => (show.value = false);
+
+const handleClickOutside = (event) => {
+    if (show.value && !event.target.closest(".notification-wrapper")) {
+        closeDropdown();
+    }
+};
+
+// === EFFECTS ===
 watch(token, (newToken) => {
-  if (newToken) {
-    headers.value.Authorization = `Bearer ${newToken}`;
-    getNotifications();
-  }
+    if (newToken) {
+        headers.value.Authorization = `Bearer ${newToken}`;
+        getNotifications();
+    }
 });
 
-// TIME AGO
-const timeAgo = (date) => {
-  const mins = Math.floor((new Date() - new Date(date)) / 60000);
-  if (mins < 1) return 'baru';
-  if (mins < 60) return `${mins}m`;
-  if (mins < 1440) return `${Math.floor(mins / 60)}j`;
-  return `${Math.floor(mins / 1440)}h`;
-};
-
-// GET NOTIFICATIONS
-
-const getNotifications = async () => {
-  if (loading.value || !token.value) return;
-  console.log('🔄 Memulai fetch notifikasi...');
-  loading.value = true;
-  try {
-    const { data } = await axios.get('http://127.0.0.1:8090/api/notifikasis?limit=15', {
-      headers: headers.value
-    });
-
-    console.log('✅ Notifikasi diterima:', data);
-    notifications.value = (data?.data || data || []).map(n => ({
-      ...n,
-      read: n.read === 1 || n.read === true,
-      time: timeAgo(n.created_at),
-    }));
-    unread.value = notifications.value.filter(n => !n.read).length;
-  } catch (e) {
-    console.error('❌ Gagal memuat notifikasi:', e);
-    toast.error('Gagal memuat notifikasi');
-  } finally {
-    loading.value = false;
-  }
-};
-
-// MARK SINGLE
-const markRead = async (id) => {
-  const index = notifications.value.findIndex(n => n.id === id);
-  if (index === -1 || notifications.value[index].read) return;
-
-  const original = { ...notifications.value[index] };
-  notifications.value[index].read = true;
-  unread.value--;
-
-  try {
-    await axios.put(`http://127.0.0.1:8090/api/notifikasis/${id}/read`, {}, {
-      headers: headers.value,
-    });
-  } catch (e) {
-    notifications.value[index] = original;
-    unread.value++;
-    toast.error('Gagal menandai notifikasi sebagai dibaca');
-  }
-};
-
-// MARK ALL
-const markAllRead = async () => {
-  if (markingAllRead.value || unread.value === 0) return;
-
-  const original = [...notifications.value];
-  notifications.value = notifications.value.map(n => ({ ...n, read: true }));
-  unread.value = 0;
-  markingAllRead.value = true;
-
-  try {
-    await axios.put('http://127.0.0.1:8090/api/notifikasi/read-all', {}, {
-      headers: headers.value,
-    });
-    toast.success('Semua notifikasi ditandai sebagai dibaca');
-  } catch (e) {
-    notifications.value = original;
-    unread.value = original.filter(n => !n.read).length;
-    toast.error('Gagal menandai semua notifikasi');
-  } finally {
-    markingAllRead.value = false;
-  }
-};
-
-// HANDLE BROADCAST
-const handleNotification = (data) => {
-  const n = {
-    ...data,
-    id: data.id || Date.now(),
-    time: 'baru',
-    read: false,
-  };
-  notifications.value.unshift(n);
-  unread.value++;
-  toast(`${n.title}: ${n.message}`, {
-    type: 'warning',
-    autoClose: 4000,
-    position: 'top-right'
-  });
-};
-
-// KLIK NOTIF
-const handleNotificationClick = (notif) => {
-  if (!notif.read) markRead(notif.id);
-};
-
-// TOGGLE DROPDOWN
-const toggle = () => show.value = !show.value;
-const closeDropdown = () => show.value = false;
-
-// CLICK OUTSIDE
-const handleClickOutside = (event) => {
-  if (show.value && !event.target.closest('.notification-wrapper')) {
-    closeDropdown();
-  }
-};
-
-// MOUNTED
 let echo = null;
 let intervalId = null;
 
 onMounted(() => {
-  setTimeout(() => {
-    token.value = window.laravelToken || localStorage.getItem('token');
-    if (token.value) {
-      localStorage.setItem('token', token.value);
-    } else {
-      toast.error('Token tidak ditemukan. Silakan login kembali.');
-      return;
+    setTimeout(() => {
+        token.value = window.laravelToken || localStorage.getItem("token");
+        if (token.value) {
+            localStorage.setItem("token", token.value);
+        } else {
+            toast.error("Token tidak ditemukan. Silakan login kembali.");
+        }
+    }, 300);
+
+    if (window.Echo) {
+        window.Echo.connector.pusher.connection.bind(
+            "connected",
+            () => (connected.value = true)
+        );
+        window.Echo.connector.pusher.connection.bind(
+            "disconnected",
+            () => (connected.value = false)
+        );
+        echo = window.Echo.channel("stock-channel").listen(
+            ".stock.minimum",
+            handleNotification
+        );
     }
-  }, 300); // Delay agar token dari Laravel sempat dimasukkan
 
-  if (window.Echo) {
-    window.Echo.connector.pusher.connection.bind('connected', () => connected.value = true);
-    window.Echo.connector.pusher.connection.bind('disconnected', () => connected.value = false);
+    intervalId = setInterval(() => {
+        if (headers.value.Authorization) getNotifications();
+    }, 60000);
 
-    echo = window.Echo.channel('stock-channel')
-      .listen('.stock.minimum', handleNotification);
-  }
-
-  intervalId = setInterval(() => {
-    if (headers.value.Authorization) getNotifications();
-  }, 60000);
-
-  document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
-  if (echo) echo.stopListening('.stock.minimum');
-  if (intervalId) clearInterval(intervalId);
-  document.removeEventListener('click', handleClickOutside);
+    if (echo) echo.stopListening(".stock.minimum");
+    if (intervalId) clearInterval(intervalId);
+    document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
-
 <template>
     <div class="notification-wrapper">
-        <button @click="toggle" class="notification-btn" :title="`${unread} notifikasi`">
+        <button
+            @click="toggle"
+            class="notification-btn"
+            :title="`${unread} notifikasi`"
+        >
             <i class="ph-bell"></i>
-            <span v-if="unread" class="badge">{{ unread > 9 ? '9+' : unread }}</span>
+            <span v-if="unread" class="badge">{{
+                unread > 9 ? "9+" : unread
+            }}</span>
             <span class="status" :class="{ connected }"></span>
         </button>
 
@@ -186,10 +195,25 @@ onUnmounted(() => {
             <div class="header">
                 <span>Notifikasi</span>
                 <div class="header-actions">
-                    <button @click="getNotifications" :disabled="loading" class="refresh-btn" title="Refresh">
-                        <i :class="loading ? 'ph-spinner ph-spin' : 'ph-arrow-clockwise'"></i>
+                    <button
+                        @click="getNotifications"
+                        :disabled="loading"
+                        class="refresh-btn"
+                        title="Refresh"
+                    >
+                        <i
+                            :class="
+                                loading
+                                    ? 'ph-spinner ph-spin'
+                                    : 'ph-arrow-clockwise'
+                            "
+                        ></i>
                     </button>
-                    <button @click="closeDropdown" class="close-btn" title="Tutup">
+                    <button
+                        @click="closeDropdown"
+                        class="close-btn"
+                        title="Tutup"
+                    >
                         <i class="ph-x"></i>
                     </button>
                 </div>
@@ -203,8 +227,13 @@ onUnmounted(() => {
                 </div>
 
                 <div v-else-if="notifications.length" class="items">
-                    <div v-for="n in notifications" :key="n.id" class="item" :class="{ unread: !n.read }"
-                        @click="handleNotificationClick(n)">
+                    <div
+                        v-for="n in notifications"
+                        :key="n.id"
+                        class="item"
+                        :class="{ unread: !n.read }"
+                        @click="handleNotificationClick(n)"
+                    >
                         <div class="icon" :class="{ unread: !n.read }">
                             <i class="ph-warning"></i>
                         </div>
@@ -227,9 +256,15 @@ onUnmounted(() => {
 
             <!-- Footer -->
             <div v-if="unread > 0" class="footer">
-                <button @click="markAllRead" :disabled="markingAllRead" class="mark-all-btn">
+                <button
+                    @click="markAllRead"
+                    :disabled="markingAllRead"
+                    class="mark-all-btn"
+                >
                     <i v-if="markingAllRead" class="ph-spinner ph-spin"></i>
-                    {{ markingAllRead ? 'Memproses...' : 'Tandai semua dibaca' }}
+                    {{
+                        markingAllRead ? "Memproses..." : "Tandai semua dibaca"
+                    }}
                 </button>
             </div>
         </div>
